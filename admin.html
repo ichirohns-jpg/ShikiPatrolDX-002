@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>志木パトロールDX 管理画面</title>
 
 <style>
@@ -27,45 +28,47 @@ body{
 }
 
 h1{
-  font-size:28px;
-  margin:0 0 14px;
+  font-size:30px;
+  line-height:1.4;
+  margin:0 0 16px;
   color:#0b3d66;
 }
 
 p{
-  font-size:17px;
-  line-height:1.7;
+  font-size:18px;
+  line-height:1.8;
 }
 
 input{
   width:100%;
-  font-size:22px;
+  font-size:24px;
   padding:16px;
-  border-radius:14px;
-  border:2px solid #cfe0ef;
-  margin-top:14px;
+  border-radius:16px;
+  border:2px solid #d3e3f1;
+  margin-top:16px;
 }
 
 button{
   width:100%;
-  margin-top:18px;
-  padding:17px;
+  margin-top:20px;
+  padding:18px;
   border:none;
-  border-radius:16px;
+  border-radius:18px;
   background:#0a84ff;
   color:#fff;
-  font-size:22px;
+  font-size:24px;
   font-weight:900;
 }
 
 #error{
-  color:#c20000;
-  font-weight:800;
-  margin-top:14px;
   display:none;
+  margin-top:18px;
+  color:#c40000;
+  font-weight:900;
+  font-size:18px;
 }
 
-#admin{
+#ok{
   display:none;
   margin-top:22px;
   background:#f6fbff;
@@ -78,41 +81,64 @@ button{
 </head>
 
 <body>
+
 <div class="wrap">
   <div class="card">
-    <h1>志木パトロールDX<br>管理画面</h1>
+
+    <h1>
+      志木パトロールDX<br>
+      管理画面
+    </h1>
 
     <p>
       管理用キーワードを入力してください。
     </p>
 
-    <input id="key" type="password" placeholder="キーワード">
+    <input
+      id="pw"
+      type="password"
+      placeholder="キーワード">
 
-    <button onclick="login()">管理画面を開く</button>
+    <button onclick="login()">
+      管理画面を開く
+    </button>
 
-    <div id="error">キーワードが違います。</div>
-
-    <div id="admin">
-      <strong>管理画面に入りました。</strong><br>
-      次にここへ、投稿一覧・対応状況・改善内容・改善後写真を入れていきます。
+    <div id="error">
+      キーワードが違います。
     </div>
+
+    <div id="ok">
+      管理画面に入りました。<br>
+      次に、対応状況や改善内容を入力できるようにしていきます。
+    </div>
+
   </div>
 </div>
 
 <script>
-const ADMIN_KEY = "shiki2026";
+const PASSWORD = "shiki2026";
 
 function login(){
-  const key = document.getElementById("key").value;
 
-  if(key === ADMIN_KEY){
+  const value =
+    document.getElementById("pw").value;
+
+  if(value === PASSWORD){
+
     document.getElementById("error").style.display = "none";
-    document.getElementById("admin").style.display = "block";
+
+    document.getElementById("ok").style.display = "block";
+
   }else{
+
     document.getElementById("error").style.display = "block";
-    document.getElementById("admin").style.display = "none";
+
+    document.getElementById("ok").style.display = "none";
+
   }
+
 }
 </script>
+
 </body>
 </html>
