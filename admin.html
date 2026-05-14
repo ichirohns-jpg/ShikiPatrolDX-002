@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>志木パトロールDX 管理</title>
+<title>志木パトロールDX 管理画面</title>
 
 <style>
 *{box-sizing:border-box}
@@ -19,7 +19,7 @@ body{
   width:100%;
   max-width:760px;
   margin:0 auto;
-  padding:14px 10px 90px;
+  padding:18px 12px 90px;
 }
 
 .title{
@@ -30,12 +30,27 @@ body{
   color:#0b3d66;
 }
 
+.login-card,
 .card{
   background:#ffffff;
   border-radius:24px;
   padding:18px;
   margin-bottom:24px;
   box-shadow:0 8px 24px rgba(0,0,0,.12);
+}
+
+.login-title{
+  font-size:34px;
+  font-weight:900;
+  line-height:1.35;
+  color:#0b3d66;
+  margin-bottom:18px;
+}
+
+.login-text{
+  font-size:20px;
+  line-height:1.7;
+  margin-bottom:16px;
 }
 
 .kind{
@@ -66,7 +81,7 @@ body{
   font-size:17px;
   font-weight:900;
   color:#0c5f9c;
-  margin-top:14px;
+  margin-top:18px;
   margin-bottom:8px;
 }
 
@@ -87,18 +102,10 @@ textarea{
   line-height:1.7;
   resize:vertical;
   margin-bottom:14px;
+  font-family:inherit;
 }
 
-input{
-  width:100%;
-  border:none;
-  border-radius:16px;
-  background:#f5f9fd;
-  padding:16px;
-  font-size:20px;
-  margin-bottom:14px;
-}
-
+input,
 select{
   width:100%;
   border:none;
@@ -107,8 +114,16 @@ select{
   padding:16px;
   font-size:20px;
   margin-bottom:14px;
+  font-family:inherit;
 }
 
+input[type="file"]{
+  background:#ffffff;
+  border:3px dashed #b8d5ef;
+  padding:20px;
+}
+
+.login-btn,
 .save-btn{
   width:100%;
   border:none;
@@ -118,12 +133,29 @@ select{
   font-size:26px;
   font-weight:900;
   padding:20px;
+  margin-top:12px;
+}
+
+.preview{
+  width:100%;
+  border-radius:18px;
+  margin:10px 0 16px;
+  display:none;
 }
 
 .ok{
-  margin-top:12px;
+  display:none;
+  margin-top:14px;
   color:#147a28;
-  font-size:18px;
+  font-size:20px;
+  font-weight:900;
+}
+
+.err{
+  display:none;
+  margin-top:14px;
+  color:#c20000;
+  font-size:20px;
   font-weight:900;
 }
 
@@ -133,6 +165,16 @@ select{
   color:#678095;
   padding:60px 20px;
 }
+
+.small{
+  font-size:15px;
+  color:#60788d;
+  line-height:1.6;
+}
+
+#adminArea{
+  display:none;
+}
 </style>
 </head>
 
@@ -140,116 +182,242 @@ select{
 
 <div class="wrap">
 
-<div class="title">
-志木パトロールDX<br>
-管理画面
+  <div id="loginArea" class="login-card">
+    <div class="login-title">
+      志木パトロールDX<br>
+      管理画面
+    </div>
+
+    <div class="login-text">
+      管理用キーワードを入力してください。
+    </div>
+
+    <input id="password" type="password" placeholder="キーワード">
+
+    <button class="login-btn" onclick="login()">
+      管理画面を開く
+    </button>
+
+    <div id="loginError" class="err">
+      キーワードが違います。
+    </div>
+  </div>
+
+  <div id="adminArea">
+
+    <div class="title">
+      志木パトロールDX<br>
+      管理画面
+    </div>
+
+    <div id="list">
+      <div class="loading">読み込み中...</div>
+    </div>
+
+  </div>
+
 </div>
 
-<div id="list">
-<div class="loading">読み込み中...</div>
-</div>
-
-</div>
+<iframe name="saveFrame" id="saveFrame" style="display:none;"></iframe>
 
 <script>
+const PASSWORD = "shiki2026";
+
 const GAS_URL =
 "https://script.google.com/macros/s/AKfycbxGj9p16DHK4zazArWIxQsIkdOungcIwkGknxicVc940rTQGUHgqME82fzFPXcyHkIQ/exec";
 
+function login(){
+  const pw = document.getElementById("password").value;
+
+  if(pw === PASSWORD){
+    document.getElementById("loginError").style.display = "none";
+    document.getElementById("loginArea").style.display = "none";
+    document.getElementById("adminArea").style.display = "block";
+    loadData();
+  }else{
+    document.getElementById("loginError").style.display = "block";
+  }
+}
+
 function loadData(){
-  const script = document.createElement('script');
-  script.src = GAS_URL + '?callback=handlePatrolData&_=' + Date.now();
+  const script = document.createElement("script");
+  script.src = GAS_URL + "?callback=handlePatrolData&_=" + Date.now();
+  script.onerror = function(){
+    document.getElementById("list").innerHTML =
+      '<div class="card">データを取得できませんでした。</div>';
+  };
   document.body.appendChild(script);
 }
 
 window.handlePatrolData = function(res){
 
   if(!res || !res.ok){
-    document.getElementById('list').innerHTML =
+    document.getElementById("list").innerHTML =
       '<div class="card">データ取得失敗</div>';
     return;
   }
 
-  let html = '';
+  let html = "";
 
-  res.data.forEach(function(item){
+  res.data.forEach(function(item,index){
+
+    const cardId = "card_" + item.rowNumber;
 
     html += `
-      <div class="card">
+      <div class="card" id="${cardId}">
 
-        <div class="kind">${escapeHtml(item.kind || '')}</div>
+        <div class="kind">${escapeHtml(item.kind || "地域情報")}</div>
 
-        <div class="date">${escapeHtml(item.date || '')}</div>
+        <div class="date">${escapeHtml(item.date || "")}</div>
 
         ${
           item.photoUrl
           ? `<img src="${escapeAttr(item.photoUrl)}" class="photo">`
-          : ''
+          : ""
         }
 
         <div class="label">内容</div>
-
-        <div class="text">
-          ${escapeHtml(item.detail || '')}
-        </div>
+        <div class="text">${escapeHtml(item.detail || "")}</div>
 
         <div class="label">対応ステータス</div>
-
-        <select>
-          <option ${item.status==='未対応'?'selected':''}>未対応</option>
-          <option ${item.status==='確認中'?'selected':''}>確認中</option>
-          <option ${item.status==='対応中'?'selected':''}>対応中</option>
-          <option ${item.status==='対応済み'?'selected':''}>対応済み</option>
+        <select id="status_${item.rowNumber}">
+          <option ${item.status==="未対応" ? "selected" : ""}>未対応</option>
+          <option ${item.status==="確認中" ? "selected" : ""}>確認中</option>
+          <option ${item.status==="対応中" ? "selected" : ""}>対応中</option>
+          <option ${item.status==="対応済み" ? "selected" : ""}>対応済み</option>
         </select>
 
         <div class="label">管理者メッセージ</div>
-
-        <textarea placeholder="管理者メッセージを書いてください">${escapeHtml(item.adminMessage || '')}</textarea>
+        <textarea id="adminMessage_${item.rowNumber}" placeholder="例：現場を確認のうえ、迅速に対応させていただきます。">${escapeHtml(item.adminMessage || "")}</textarea>
 
         <div class="label">改善内容</div>
+        <textarea id="improvement_${item.rowNumber}" placeholder="改善内容を入力">${escapeHtml(item.improvement || "")}</textarea>
 
-        <textarea placeholder="改善内容">${escapeHtml(item.improvement || '')}</textarea>
+        <div class="label">改善後写真</div>
+        <input id="afterFile_${item.rowNumber}" type="file" accept="image/*" onchange="previewImage(${item.rowNumber})">
+
+        <img id="preview_${item.rowNumber}" class="preview">
+
+        <div class="small">
+          写真を撮る、またはライブラリから選べます。選ばない場合は既存の写真URLを使います。
+        </div>
 
         <div class="label">改善後写真URL</div>
-
-        <input
-          type="text"
-          value="${escapeAttr(item.afterPhoto || '')}"
-          placeholder="改善後写真URL">
+        <input id="afterPhoto_${item.rowNumber}" type="text" value="${escapeAttr(item.afterPhoto || "")}" placeholder="改善後写真URL">
 
         <div class="label">対応日</div>
+        <input id="responseDate_${item.rowNumber}" type="text" value="${escapeAttr(item.responseDate || "")}" placeholder="2026/05/12">
 
-        <input
-          type="text"
-          value="${escapeAttr(item.responseDate || '')}"
-          placeholder="2026/05/12">
+        <div class="label">管理メモ</div>
+        <textarea id="adminMemo_${item.rowNumber}" placeholder="内部メモ">${escapeHtml(item.adminMemo || "")}</textarea>
 
-        <button class="save-btn">
+        <button class="save-btn" onclick="saveItem(${item.rowNumber})">
           保存する
         </button>
 
-        <div class="ok">
-          ※ 現在は表示テスト中
+        <div id="ok_${item.rowNumber}" class="ok">
+          保存しました。
+        </div>
+
+        <div id="err_${item.rowNumber}" class="err">
+          保存できませんでした。
         </div>
 
       </div>
     `;
   });
 
-  document.getElementById('list').innerHTML = html;
+  document.getElementById("list").innerHTML = html;
 };
 
+function previewImage(rowNumber){
+  const fileInput = document.getElementById("afterFile_" + rowNumber);
+  const preview = document.getElementById("preview_" + rowNumber);
+
+  if(!fileInput.files || !fileInput.files[0]){
+    preview.style.display = "none";
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function(e){
+    preview.src = e.target.result;
+    preview.style.display = "block";
+  };
+
+  reader.readAsDataURL(fileInput.files[0]);
+}
+
+function saveItem(rowNumber){
+
+  const fileInput = document.getElementById("afterFile_" + rowNumber);
+  const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+
+  if(file){
+    const reader = new FileReader();
+
+    reader.onload = function(e){
+      submitSave(rowNumber, e.target.result, file.name, file.type);
+    };
+
+    reader.readAsDataURL(file);
+
+  }else{
+    submitSave(rowNumber, "", "", "");
+  }
+}
+
+function submitSave(rowNumber, base64, filename, mime){
+
+  document.getElementById("ok_" + rowNumber).style.display = "none";
+  document.getElementById("err_" + rowNumber).style.display = "none";
+
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = GAS_URL;
+  form.target = "saveFrame";
+  form.style.display = "none";
+
+  addField(form, "rowNumber", rowNumber);
+  addField(form, "status", document.getElementById("status_" + rowNumber).value);
+  addField(form, "adminMessage", document.getElementById("adminMessage_" + rowNumber).value);
+  addField(form, "improvement", document.getElementById("improvement_" + rowNumber).value);
+  addField(form, "afterPhoto", document.getElementById("afterPhoto_" + rowNumber).value);
+  addField(form, "responseDate", document.getElementById("responseDate_" + rowNumber).value);
+  addField(form, "adminMemo", document.getElementById("adminMemo_" + rowNumber).value);
+
+  addField(form, "afterPhotoBase64", base64);
+  addField(form, "afterPhotoName", filename);
+  addField(form, "afterPhotoMime", mime);
+
+  document.body.appendChild(form);
+  form.submit();
+
+  setTimeout(function(){
+    document.getElementById("ok_" + rowNumber).style.display = "block";
+    form.remove();
+  }, 1200);
+}
+
+function addField(form, name, value){
+  const input = document.createElement("input");
+  input.type = "hidden";
+  input.name = name;
+  input.value = value || "";
+  form.appendChild(input);
+}
+
 function escapeHtml(str){
-  return String(str || '')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;');
+  return String(str || "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
 }
 
 function escapeAttr(str){
-  return escapeHtml(str).replace(/"/g,'&quot;');
+  return escapeHtml(str).replace(/"/g,"&quot;");
 }
-
-loadData();
 </script>
 
 </body>
