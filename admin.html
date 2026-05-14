@@ -7,6 +7,8 @@
 <title>志木パトロールDX 管理画面</title>
 
 <style>
+*{box-sizing:border-box}
+
 body{
   margin:0;
   font-family:"Hiragino Sans","Yu Gothic","Meiryo",sans-serif;
@@ -15,16 +17,17 @@ body{
 }
 
 .wrap{
-  max-width:520px;
+  max-width:720px;
   margin:0 auto;
-  padding:28px 16px;
+  padding:18px 12px 80px;
 }
 
 .card{
   background:#fff;
   border-radius:24px;
-  padding:26px 20px;
+  padding:22px 18px;
   box-shadow:0 8px 24px rgba(20,70,120,.18);
+  margin-bottom:18px;
 }
 
 h1{
@@ -39,24 +42,29 @@ p{
   line-height:1.8;
 }
 
-input{
+input,textarea,select{
   width:100%;
-  font-size:24px;
-  padding:16px;
-  border-radius:16px;
+  font-size:20px;
+  padding:14px;
+  border-radius:14px;
   border:2px solid #d3e3f1;
-  margin-top:16px;
+  margin-top:10px;
+  font-family:inherit;
+}
+
+textarea{
+  min-height:110px;
 }
 
 button{
   width:100%;
-  margin-top:20px;
-  padding:18px;
+  margin-top:16px;
+  padding:17px;
   border:none;
   border-radius:18px;
   background:#0a84ff;
   color:#fff;
-  font-size:24px;
+  font-size:22px;
   font-weight:900;
 }
 
@@ -68,14 +76,64 @@ button{
   font-size:18px;
 }
 
-#ok{
+#admin{
   display:none;
-  margin-top:22px;
-  background:#f6fbff;
-  border-radius:18px;
-  padding:18px;
+}
+
+.item{
+  background:#f7fbff;
+  border:1px solid #d8eaf8;
+  border-radius:20px;
+  padding:16px;
+  margin-top:16px;
+}
+
+.kind{
+  display:inline-block;
+  background:#dfefff;
+  color:#005bbb;
+  border-radius:999px;
+  padding:8px 14px;
+  font-size:17px;
+  font-weight:900;
+  margin-bottom:10px;
+}
+
+.date{
+  font-size:15px;
+  color:#678095;
+  margin-bottom:10px;
+}
+
+.detail{
   font-size:18px;
-  line-height:1.8;
+  line-height:1.7;
+  margin-bottom:12px;
+}
+
+.photo{
+  width:100%;
+  border-radius:16px;
+  margin-top:10px;
+}
+
+.map{
+  display:block;
+  text-align:center;
+  text-decoration:none;
+  background:#08783d;
+  color:#fff;
+  font-size:20px;
+  font-weight:900;
+  border-radius:16px;
+  padding:14px;
+  margin-top:12px;
+}
+
+.small{
+  font-size:14px;
+  color:#60788d;
+  line-height:1.7;
 }
 </style>
 </head>
@@ -83,59 +141,144 @@ button{
 <body>
 
 <div class="wrap">
-  <div class="card">
 
-    <h1>
-      志木パトロールDX<br>
-      管理画面
-    </h1>
+  <div class="card" id="loginBox">
+    <h1>志木パトロールDX<br>管理画面</h1>
 
     <p>
       管理用キーワードを入力してください。
     </p>
 
-    <input
-      id="pw"
-      type="password"
-      placeholder="キーワード">
+    <input id="pw" type="password" placeholder="キーワード">
 
-    <button onclick="login()">
-      管理画面を開く
-    </button>
+    <button onclick="login()">管理画面を開く</button>
 
-    <div id="error">
-      キーワードが違います。
-    </div>
+    <div id="error">キーワードが違います。</div>
+  </div>
 
-    <div id="ok">
-      管理画面に入りました。<br>
-      次に、対応状況や改善内容を入力できるようにしていきます。
+  <div id="admin">
+
+    <div class="card">
+      <h1>投稿一覧</h1>
+      <p class="small">
+        ここでは投稿内容を確認します。次の段階で、対応状況・改善内容・改善後写真を保存できるようにします。
+      </p>
+      <div id="list">読み込み中...</div>
     </div>
 
   </div>
+
 </div>
 
 <script>
 const PASSWORD = "shiki2026";
 
+const GAS_URL =
+"https://script.google.com/macros/s/AKfycbys6bU-HEVqwzYuFrckbc1yEY2wv8MU1r0oqW9XvePaBRFK8rBojj3_Dl5P-eahMvkS/exec";
+
 function login(){
 
-  const value =
-    document.getElementById("pw").value;
+  const value = document.getElementById("pw").value;
 
   if(value === PASSWORD){
 
     document.getElementById("error").style.display = "none";
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("admin").style.display = "block";
 
-    document.getElementById("ok").style.display = "block";
+    loadData();
 
   }else{
 
     document.getElementById("error").style.display = "block";
 
-    document.getElementById("ok").style.display = "none";
+  }
+}
+
+function loadData(){
+
+  const script = document.createElement("script");
+
+  script.src =
+    GAS_URL +
+    "?callback=handlePatrolData&_=" +
+    Date.now();
+
+  script.onerror = function(){
+    document.getElementById("list").innerHTML =
+      "データを取得できませんでした。";
+  };
+
+  document.body.appendChild(script);
+}
+
+window.handlePatrolData = function(res){
+
+  const list = document.getElementById("list");
+
+  if(!res || !res.ok){
+
+    list.innerHTML = "データ取得エラー";
+    return;
 
   }
+
+  if(!res.data || res.data.length === 0){
+
+    list.innerHTML = "投稿がありません";
+    return;
+
+  }
+
+  let html = "";
+
+  res.data.forEach(function(item,index){
+
+    html += `
+      <div class="item">
+
+        <div class="kind">${escapeHtml(item.kind || "地域情報")}</div>
+
+        <div class="date">${escapeHtml(item.date || "")}</div>
+
+        <div class="detail">${escapeHtml(item.detail || "詳細内容は未入力です。")}</div>
+
+        ${
+          item.photoUrl
+          ? `<img src="${escapeAttr(item.photoUrl)}" class="photo">`
+          : ""
+        }
+
+        ${
+          item.location
+          ? `<a class="map" href="https://maps.google.com/?q=${encodeURIComponent(item.location)}" target="_blank">Googleマップを見る</a>`
+          : ""
+        }
+
+        <p class="small">
+          次の段階で、この投稿に「対応状況・改善内容・改善後写真」を入力できるようにします。
+        </p>
+
+      </div>
+    `;
+
+  });
+
+  list.innerHTML = html;
+};
+
+function escapeHtml(str){
+
+  return String(str || "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
+
+}
+
+function escapeAttr(str){
+
+  return escapeHtml(str).replace(/"/g,"&quot;");
 
 }
 </script>
