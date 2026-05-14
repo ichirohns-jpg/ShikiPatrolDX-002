@@ -136,6 +136,19 @@ input[type="file"]{
   margin-top:12px;
 }
 
+.back-top-btn{
+  display:block;
+  text-align:center;
+  text-decoration:none;
+  background:linear-gradient(135deg,#18a058,#08783d);
+  color:#fff;
+  font-size:24px;
+  font-weight:900;
+  padding:18px;
+  border-radius:18px;
+  margin:28px 0 10px;
+}
+
 .preview{
   width:100%;
   border-radius:18px;
@@ -198,6 +211,12 @@ input[type="file"]{
       管理画面を開く
     </button>
 
+    <a
+      href="https://ichirohns-jpg.github.io/ShikiPatrolDX-001/"
+      class="back-top-btn">
+      市民向けページに戻る
+    </a>
+
     <div id="loginError" class="err">
       キーワードが違います。
     </div>
@@ -213,6 +232,12 @@ input[type="file"]{
     <div id="list">
       <div class="loading">読み込み中...</div>
     </div>
+
+    <a
+      href="https://ichirohns-jpg.github.io/ShikiPatrolDX-001/"
+      class="back-top-btn">
+      市民向けページに戻る
+    </a>
 
   </div>
 
@@ -242,10 +267,12 @@ function login(){
 function loadData(){
   const script = document.createElement("script");
   script.src = GAS_URL + "?callback=handlePatrolData&_=" + Date.now();
+
   script.onerror = function(){
     document.getElementById("list").innerHTML =
       '<div class="card">データを取得できませんでした。</div>';
   };
+
   document.body.appendChild(script);
 }
 
@@ -259,12 +286,10 @@ window.handlePatrolData = function(res){
 
   let html = "";
 
-  res.data.forEach(function(item,index){
-
-    const cardId = "card_" + item.rowNumber;
+  res.data.forEach(function(item){
 
     html += `
-      <div class="card" id="${cardId}">
+      <div class="card">
 
         <div class="kind">${escapeHtml(item.kind || "地域情報")}</div>
 
@@ -310,6 +335,12 @@ window.handlePatrolData = function(res){
 
         <div class="label">管理メモ</div>
         <textarea id="adminMemo_${item.rowNumber}" placeholder="内部メモ">${escapeHtml(item.adminMemo || "")}</textarea>
+
+        <div class="label">表示設定</div>
+        <select id="visible_${item.rowNumber}">
+          <option ${item.visible==="表示" || !item.visible ? "selected" : ""}>表示</option>
+          <option ${item.visible==="非表示" ? "selected" : ""}>非表示</option>
+        </select>
 
         <button class="save-btn" onclick="saveItem(${item.rowNumber})">
           保存する
@@ -386,6 +417,7 @@ function submitSave(rowNumber, base64, filename, mime){
   addField(form, "afterPhoto", document.getElementById("afterPhoto_" + rowNumber).value);
   addField(form, "responseDate", document.getElementById("responseDate_" + rowNumber).value);
   addField(form, "adminMemo", document.getElementById("adminMemo_" + rowNumber).value);
+  addField(form, "visible", document.getElementById("visible_" + rowNumber).value);
 
   addField(form, "afterPhotoBase64", base64);
   addField(form, "afterPhotoName", filename);
